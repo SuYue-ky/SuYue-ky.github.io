@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>版主管理后台系统 V11</title>
+<style>
+:root{
+  --bg:#f3f4f6;--panel:#ffffff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;
+  --accent:#ec4899;--accent2:#8b5cf6;--good:#10b981;--warn:#f59e0b;--bad:#ef4444;
+  --shadow:0 10px 30px rgba(17,24,39,.06);--radius:18px;
+  /* Season/theme overrides applied via JS */
+  --theme-h1:#6d28d9;--theme-h2:#db2777;--theme-bg1:#f0e6ff;--theme-bg2:#fff0f6;--theme-bg3:#e8f4ff;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;overflow:hidden}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{height:100vh;display:grid;grid-template-columns:260px minmax(0,1fr)}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr)}.sidebar{display:none}.main{overflow:auto}body{overflow:auto}}
+
+/* ── Sidebar ── */
+.sidebar{background:#fff;border-right:1px solid var(--line);padding:14px 12px;overflow:auto;display:flex;flex-direction:column;gap:0}
+.brand{border:1px solid var(--line);border-radius:16px;padding:12px;background:linear-gradient(180deg,#fff,#fbfbfc);box-shadow:var(--shadow);flex-shrink:0}
+.brand h1{margin:0;font-size:14px;line-height:1.3}
+.brand p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.7}
+.pill-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.pill{padding:3px 7px;border:1px solid var(--line);background:#fafafa;border-radius:999px;font-size:10px;color:#374151}
+.section-title{margin:12px 0 7px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9ca3af}
+.nav-btn,.board-btn{width:100%;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:11px;padding:9px 11px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:7px;text-align:left;transition:.15s ease}
+.nav-btn:hover,.board-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.nav-btn.active,.board-btn.active{border-color:#f9a8d4;background:#fff7fb}
+.left-block,.left{display:flex;align-items:center;gap:7px;min-width:0}
+.icon{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#f3f4f6;flex:none;font-size:13px}
+.nav-btn strong,.board-btn strong{display:block;font-size:12px}
+.nav-btn small,.board-btn small{display:block;color:var(--muted);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.sidebar-foot{margin-top:auto;padding:10px;border:1px solid var(--line);background:#fafafa;border-radius:12px;color:var(--muted);font-size:10px;line-height:1.8}
+
+/* ── Main ── */
+.main{min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.topbar{flex:none;height:60px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px}
+.topbar h2{margin:0;font-size:17px;line-height:1.2}
+.topbar p{margin:3px 0 0;color:var(--muted);font-size:11px}
+.actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.btn{border:1px solid var(--line);background:#fff;color:#111827;border-radius:9px;padding:7px 11px;font-size:12px;transition:.15s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+.btn.good{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-color:transparent}
+.btn.warn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-color:transparent}
+.btn.soft{background:#f9fafb}
+.content{min-width:0;flex:1;overflow:auto;padding:12px}
+.panel{display:none;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:10px}
+.panel.active{display:block}
+.panel-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start;background:#fff}
+.panel-head h3{margin:0 0 3px;font-size:15px}
+.panel-head p{margin:0;color:var(--muted);font-size:11px;line-height:1.6}
+.toolbar{padding:12px 14px 0;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:9px}
+@media(max-width:700px){.toolbar{grid-template-columns:1fr 1fr}}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:10px;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 10px;color:var(--text);outline:none}
+.field textarea{min-height:72px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#f9a8d4;box-shadow:0 0 0 3px rgba(236,72,153,.08)}
+.grid-2{padding:12px 14px 14px;display:grid;grid-template-columns:1.2fr .8fr;gap:10px}
+@media(max-width:700px){.grid-2{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px;min-width:0}
+.card h4{margin:0 0 8px;font-size:13px}
+.card .sub{margin:0 0 8px;color:var(--muted);font-size:11px;line-height:1.7}
+.overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+@media(max-width:700px){.overview{grid-template-columns:repeat(2,1fr)}}
+.mini{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#fff,#fafafa);padding:10px}
+.mini .k{font-size:10px;color:var(--muted)}
+.mini .v{margin-top:5px;font-size:20px;font-weight:800;line-height:1.1}
+.mini .s{margin-top:4px;font-size:10px;color:var(--muted);line-height:1.5}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px}
+thead th{position:sticky;top:0;z-index:2;background:#f8fafc;border-bottom:1px solid var(--line);padding:9px 8px;font-size:11px;color:#374151;white-space:nowrap}
+tbody td{border-bottom:1px solid #f1f5f9;padding:8px;font-size:11px;vertical-align:middle;background:#fff}
+tbody tr:nth-child(even) td{background:#fcfcfd}
+tbody tr:hover td{background:#fff7fb}
+.cell{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px 8px;outline:none}
+.cell:focus{border-color:#f9a8d4;box-shadow:0 0 0 3px rgba(236,72,153,.08)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:999px;font-size:10px;border:1px solid var(--line);background:#fafafa;color:#374151;white-space:nowrap}
+.tag.ok{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+.tag.warn{background:#fffbeb;border-color:#fde68a;color:#b45309}
+.tag.bad{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+.tag.info{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+.actions-row{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.mini-btn{border:1px solid var(--line);background:#fff;padding:5px 8px;border-radius:8px;font-size:10px}
+.mini-btn.primary{background:#fff7fb;border-color:#fbcfe8;color:#9d174d}
+.mini-btn.good{background:#ecfdf5;border-color:#bbf7d0;color:#047857}
+.mini-btn.warn{background:#fffbeb;border-color:#fde68a;color:#b45309}
+.mini-btn.bad{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+@media(max-width:600px){.split{grid-template-columns:1fr}}
+.list{display:grid;gap:7px}
+.list-item{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px}
+.reward-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:9px}
+.reward-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;min-width:0;overflow:hidden}
+.reward-top{display:flex;justify-content:space-between;gap:7px;align-items:flex-start;flex-wrap:wrap}
+.reward-top strong{font-size:12px;min-width:0;word-break:break-word}
+.reward-top small{color:var(--muted);font-size:10px}
+.reward-ctrl{display:grid;grid-template-columns:1fr 80px 70px 44px;gap:5px;margin-top:9px}
+.reward-ctrl input,.reward-ctrl select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:#fff;min-width:0;width:100%}
+.reward-tags{display:flex;flex-wrap:wrap;gap:5px;padding:2px 0}
+.reward-tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#f5f7ff;border:1px solid #dbe4ff;font-size:10px;white-space:nowrap;max-width:100%;color:#3730a3}
+.info{border:1px dashed #f9a8d4;background:#fff7fb;color:#9d174d;border-radius:10px;padding:9px 11px;font-size:11px;line-height:1.8}
+.row{display:grid;grid-template-columns:1.2fr .9fr auto;gap:9px;align-items:center}
+
+/* ── Export Shell ── */
+.export-shell{padding:12px 14px 14px;background:#e8eaf0;overflow:auto}
+.export-paper{width:1600px;min-height:900px;margin:0 auto;background:#fff;border:1px solid #dbe2ea;border-radius:16px;overflow:visible;box-shadow:0 20px 60px rgba(17,24,39,.10);color:#111827;position:relative;display:flex;flex-direction:column}
+
+/* ──── POSTER HEADER (matches reference image) ──── */
+.poster-header{
+  position:relative;padding:0;
+  background:linear-gradient(135deg,var(--theme-bg1) 0%,var(--theme-bg2) 50%,var(--theme-bg3) 100%);
+  border-bottom:2px solid rgba(139,92,246,.15);
+  display:flex;flex-direction:column;align-items:stretch;flex-shrink:0;overflow:hidden;
+}
+.poster-header::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 8% 50%,rgba(236,72,153,.07) 0%,transparent 50%),
+             radial-gradient(circle at 92% 30%,rgba(139,92,246,.06) 0%,transparent 50%),
+             url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238b5cf6' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+/* Title section: big board name centered at top */
+.poster-title-row{
+  text-align:center;padding:28px 140px 16px;position:relative;z-index:1;
+}
+.poster-site-tag{
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#a78bfa;font-weight:700;margin-bottom:6px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.poster-site-tag::before,.poster-site-tag::after{content:'';display:inline-block;width:40px;height:1px;background:linear-gradient(90deg,transparent,#a78bfa)}
+.poster-site-tag::after{background:linear-gradient(90deg,#a78bfa,transparent)}
+.poster-main-title{
+  font-size:42px;font-weight:900;line-height:1.1;letter-spacing:.04em;
+  background:linear-gradient(135deg,var(--theme-h1),var(--theme-h2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin:0 0 4px;
+}
+.poster-sub-title{
+  font-size:17px;font-weight:700;color:#374151;margin:0 0 10px;letter-spacing:.06em;
+}
+.poster-period-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,var(--theme-h1),var(--theme-h2));
+  color:#fff;border-radius:999px;padding:5px 18px;font-size:13px;font-weight:600;letter-spacing:.05em;
+  box-shadow:0 4px 12px rgba(109,40,217,.2);
+}
+/* Info row below title: board info + stats + cert */
+.poster-info-row{
+  display:flex;align-items:stretch;gap:0;
+  border-top:1px solid rgba(139,92,246,.12);
+  background:rgba(255,255,255,.55);backdrop-filter:blur(4px);
+  position:relative;z-index:1;
+}
+.poster-board-info{
+  flex:0 0 auto;padding:14px 22px;border-right:1px solid rgba(139,92,246,.12);min-width:220px;
+}
+.poster-board-info h4{margin:0 0 7px;font-size:12px;font-weight:700;color:#374151;display:flex;align-items:center;gap:5px}
+.poster-board-info h4::before{content:'📋';font-size:12px}
+.poster-board-info p{margin:0;font-size:11px;color:#4b5563;line-height:2;white-space:nowrap}
+.poster-stats-block{
+  flex:1;padding:14px 22px;display:flex;align-items:center;gap:0;border-right:1px solid rgba(139,92,246,.12);
+}
+.poster-stats-block h4{margin:0 0 10px;font-size:12px;font-weight:700;color:#374151;display:flex;align-items:center;gap:5px}
+.poster-stats-block h4::before{content:'📊';font-size:12px}
+.poster-stats-inner{display:flex;align-items:center;gap:0;width:100%}
+.p-stat{
+  flex:1;text-align:center;padding:6px 10px;
+  border-right:1px solid rgba(139,92,246,.12);
+}
+.p-stat:last-child{border-right:none}
+.p-stat .sv{font-size:28px;font-weight:900;line-height:1;color:var(--theme-h1)}
+.p-stat .sk{font-size:10px;color:#94a3b8;margin-top:3px;letter-spacing:.04em}
+.poster-cert-block{
+  flex:0 0 auto;padding:14px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:150px;
+}
+.cert-stamp{
+  width:90px;height:90px;border-radius:50%;
+  border:3px solid #e11d48;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;color:#e11d48;font-weight:900;line-height:1.2;font-size:11px;
+  background:rgba(255,255,255,.96);transform:rotate(-8deg);
+  box-shadow:0 0 0 4px rgba(225,29,72,.07),0 4px 12px rgba(225,29,72,.12);
+  position:relative;
+}
+.cert-stamp::before{
+  content:'';position:absolute;inset:4px;border-radius:50%;
+  border:1px dashed rgba(225,29,72,.3);
+}
+.cert-stamp .crown{font-size:14px;margin-bottom:2px}
+.cert-stamp .main-text{font-size:11px;font-weight:900;line-height:1.2}
+.cert-stamp .sub-text{font-size:8px;letter-spacing:.05em;margin-top:1px}
+.cert-meta{font-size:10px;color:#64748b;text-align:right;line-height:1.8}
+.cert-meta strong{color:#374151}
+.cert-sig{
+  font-family:"STKaiti","KaiTi","楷体",serif;
+  font-size:22px;font-weight:700;color:#e11d48;
+  margin-top:2px;
+}
+
+/* ── POSTER BODY: member table ── */
+.poster-body{flex:1;padding:16px 22px 20px;background:#fff;overflow:visible}
+.poster-section-label{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.poster-section-label strong{font-size:12px;color:#374151}
+.poster-section-label span{font-size:10px;color:#94a3b8;margin-left:auto}
+.poster-section-label::before{content:'';display:block;width:3px;height:13px;border-radius:2px;background:linear-gradient(180deg,var(--accent),var(--accent2));flex-shrink:0}
+
+/* Watermark overlay */
+.poster-watermark{
+  position:absolute;inset:0;pointer-events:none;z-index:10;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.watermark-text{
+  font-size:80px;font-weight:900;color:rgba(139,92,246,.04);
+  transform:rotate(-25deg);white-space:nowrap;letter-spacing:.1em;
+  text-transform:uppercase;user-select:none;
+  text-shadow:none;
+}
+
+/* Export table */
+.exp-table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+.exp-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:auto;font-size:12px}
+.exp-table thead th{
+  background:linear-gradient(180deg,#6d28d9,#7c3aed);
+  border-bottom:1px solid rgba(255,255,255,.15);
+  padding:10px 10px;font-size:11px;color:#fff;white-space:nowrap;text-align:center;font-weight:700;
+}
+.exp-table thead th:first-child{border-radius:12px 0 0 0;text-align:center}
+.exp-table thead th:last-child{border-radius:0 12px 0 0}
+.exp-table tbody td{border-bottom:1px solid #f1f5f9;padding:9px 10px;font-size:12px;vertical-align:middle;background:#fff;text-align:center}
+.exp-table tbody tr:nth-child(even) td{background:#faf8ff}
+.exp-table tbody tr:last-child td{border-bottom:none}
+.exp-table tbody tr:hover td{background:#f3f0ff}
+.exp-avatar{width:44px;height:44px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#f9a8d4,#c4b5fd);border:1px solid #f3c4da;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;margin:0 auto}
+.exp-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+/* Reward badges in table */
+.rw-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+
+/* Footer bar */
+.poster-footer{
+  background:linear-gradient(135deg,var(--theme-h1),var(--theme-h2));
+  color:#fff;padding:12px 24px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.06em;
+  border-radius:0 0 14px 14px;
+}
+
+/* Export controls */
+.export-controls{padding:10px 14px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.export-toggle-row{padding:10px 14px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toggle-chip{display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:11px;cursor:pointer;user-select:none;transition:.15s}
+.toggle-chip:hover{border-color:#c4b5fd;background:#f5f3ff}
+.toggle-chip input{accent-color:#8b5cf6}
+.toggle-chip.active{border-color:#8b5cf6;background:#f5f3ff;color:#6d28d9;font-weight:600}
+
+/* Modal */
+.modal-mask{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:12px;background:rgba(15,23,42,.38);backdrop-filter:blur(6px)}
+.modal-mask.show{display:flex}
+.modal{width:min(960px,100%);max-height:88vh;overflow:hidden;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);display:grid;grid-template-rows:auto 1fr auto}
+.modal-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.modal-head h4{margin:0 0 3px;font-size:15px}
+.modal-head p{margin:0;color:var(--muted);font-size:11px;line-height:1.6}
+.close{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff;color:#111827;font-size:16px}
+.modal-body{padding:12px 14px;overflow:auto}
+.modal-foot{padding:10px 14px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:12px;background:#fafafa;text-align:center;color:#94a3b8;font-size:12px}
+.hidden{display:none !important}
+.loading{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.85);color:#111827;backdrop-filter:blur(3px);font-size:14px;flex-direction:column;gap:10px}
+.loading.show{display:flex}
+.loading-spinner{width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#8b5cf6;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.info-table{width:100%;border-collapse:collapse;font-size:11px}
+.info-table td{padding:5px 6px;border-bottom:1px solid #f1f5f9;line-height:1.5;vertical-align:top}
+.info-table td:first-child{color:#64748b;width:34%}
+
+/* Theme swatches */
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.theme-swatch{border:2px solid transparent;border-radius:10px;padding:8px;cursor:pointer;transition:.15s;text-align:center;font-size:11px}
+.theme-swatch:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.theme-swatch.active{border-color:#8b5cf6}
+.theme-swatch .swatch-bar{height:20px;border-radius:6px;margin-bottom:5px}
+
+@media print{
+  @page{size:landscape;margin:5mm}
+  body{background:#fff;overflow:visible}
+  .sidebar,.topbar,.panel:not(#panel-export),.loading,.modal-mask{display:none !important}
+  .main{overflow:visible}
+  .content{padding:0;overflow:visible}
+  #panel-export{display:block !important;border:none;box-shadow:none;margin:0}
+  .export-shell{padding:0;background:#fff}
+  .export-paper{box-shadow:none;border:none;border-radius:0;width:100%}
+  .export-controls,.export-toggle-row,.panel-head{display:none !important}
+}
+@media(max-width:600px){
+  .reward-grid{grid-template-columns:1fr}
+  .reward-ctrl{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+  .export-paper{width:100%!important}
+}
+</style>
+</head>
+<body>
+<div class="loading" id="loading"><div class="loading-spinner"></div>正在导出，请稍候…</div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>葫芦侠版主管理后台</h1>
+      <p>双板块独立管理 · 海报级导出 · V11</p>
+      <div class="pill-row">
+        <span class="pill">V11</span><span class="pill">PNG导出</span><span class="pill">季节主题</span>
+      </div>
+    </div>
+    <div class="section-title">板块切换</div>
+    <div id="boardTabs"></div>
+    <div class="section-title">功能区</div>
+    <div id="navTabs"></div>
+    <div class="sidebar-foot">
+      V11：PNG海报导出 · 季节主题 · 防伪水印 · 公示排版优化
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div><h2 id="pageTitle">控制台</h2><p id="pageDesc">正在加载…</p></div>
+      <div class="actions">
+        <button class="btn soft" id="btnSave">💾 保存</button>
+        <button class="btn soft" id="btnAddMember">＋ 新增成员</button>
+        <button class="btn good" id="btnExportPNG">📸 导出 PNG</button>
+        <button class="btn warn" id="btnExportPDF">🖨 打印/PDF</button>
+      </div>
+    </header>
+    <div class="content">
+      <section id="panel-dashboard" class="panel active"></section>
+      <section id="panel-members" class="panel"></section>
+      <section id="panel-roles" class="panel"></section>
+      <section id="panel-rewards" class="panel"></section>
+      <section id="panel-export" class="panel"></section>
+      <section id="panel-settings" class="panel"></section>
+    </div>
+  </main>
+</div>
+
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h4 id="modalTitle">编辑</h4><p id="modalDesc">请填写信息。</p></div>
+      <button class="close" id="modalClose">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+<input type="file" id="avatarInput" accept="image/*" hidden />
+<script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+(()=>{
+'use strict';
+const STORAGE_KEY='huluxia_moderator_v11';
+
+const THEMES={
+  default:{name:'默认紫粉',h1:'#6d28d9',h2:'#db2777',bg1:'#f0e6ff',bg2:'#fff0f6',bg3:'#e8f4ff'},
+  spring:{name:'🌸 春日樱花',h1:'#be185d',h2:'#9d174d',bg1:'#fff0f6',bg2:'#fdf2f8',bg3:'#fce7f3'},
+  summer:{name:'🌊 夏日泳池',h1:'#0369a1',h2:'#0891b2',bg1:'#e0f2fe',bg2:'#ecfeff',bg3:'#f0fdf4'},
+  autumn:{name:'🍂 秋日枫叶',h1:'#9a3412',h2:'#c2410c',bg1:'#fff7ed',bg2:'#fef3c7',bg3:'#fefce8'},
+  winter:{name:'❄️ 冬日冰雪',h1:'#1e3a8a',h2:'#1d4ed8',bg1:'#eff6ff',bg2:'#f0f9ff',bg3:'#e0f2fe'},
+  cosmos:{name:'🌌 次元星空',h1:'#4c1d95',h2:'#7c3aed',bg1:'#f5f3ff',bg2:'#ede9fe',bg3:'#ddd6fe'},
+};
+
+function monthText(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+
+const DEFAULTS={
+  cyg:{
+    id:'cyg',name:'次元阁',title:'次元阁月度奖励公示单',subtitle:'成员、岗位、奖励、公示独立管理',
+    responsible:'诗光',signature:'诗光',sealText:'已审核通过',period:monthText(),theme:'cosmos',
+    certNo:`CYG${new Date().toISOString().slice(0,10).replace(/-/g,'')}`,
+    footerText:'感谢每一位成员的付出与努力，让我们一起建设更好的次元阁！',
+    roles:[{id:1,name:'总管理',note:'全局统筹'},{id:2,name:'接待组长',note:'接待协调'},{id:3,name:'资源组长',note:'资源管理'},{id:4,name:'内容组长',note:'内容产出'}],
+    rewardTypes:[
+      {id:'base',name:'基础奖励',sign:1,defaultValue:180,color:'#ec4899',note:'岗位基础',enabled:true},
+      {id:'perf',name:'绩效奖励',sign:1,defaultValue:80,color:'#8b5cf6',note:'绩效表现',enabled:true},
+      {id:'event',name:'活动奖励',sign:1,defaultValue:60,color:'#0ea5e9',note:'活动参与',enabled:true},
+      {id:'content',name:'内容奖励',sign:1,defaultValue:50,color:'#22c55e',note:'内容产出',enabled:true},
+      {id:'special',name:'特殊贡献',sign:1,defaultValue:100,color:'#a855f7',note:'特殊贡献',enabled:true},
+      {id:'penalty',name:'处罚扣减',sign:-1,defaultValue:30,color:'#ef4444',note:'违规扣减',enabled:true},
+    ],
+    members:[
+      {id:1,uid:'CYG001',nickname:'夏沫',avatar:'',role:'总管理',status:'已完成',sendStatus:'已发放',remark:'首月优秀',rewards:{base:180,perf:120,event:50,content:40,special:20,penalty:0}},
+      {id:2,uid:'CYG002',nickname:'小鱼',avatar:'',role:'接待组长',status:'待审核',sendStatus:'待发放',remark:'接待支持',rewards:{base:180,perf:60,event:20,content:0,special:0,penalty:0}},
+    ]
+  },
+  pool:{
+    id:'pool',name:'葫芦侠泳池',title:'葫芦侠泳池管理组月度奖励公示单',subtitle:'成员、岗位、奖励、公示独立管理',
+    responsible:'葫芦侠',signature:'葫芦侠',sealText:'已审核通过',period:monthText(),theme:'summer',
+    certNo:`HLX${new Date().toISOString().slice(0,10).replace(/-/g,'')}`,
+    footerText:'感谢每一位成员的付出与努力，让我们一起建设更好的葫芦侠泳池！',
+    roles:[{id:1,name:'超级版主',note:'总负责'},{id:2,name:'版主',note:'日常管理'},{id:3,name:'管理组',note:'活动运营'},{id:4,name:'见习版主',note:'见习期'}],
+    rewardTypes:[
+      {id:'best',name:'优秀版主',sign:1,defaultValue:50,color:'#f59e0b',note:'优秀表现',enabled:true},
+      {id:'star',name:'月度之星',sign:1,defaultValue:60,color:'#ec4899',note:'月度最佳',enabled:true},
+      {id:'contrib',name:'最佳贡献',sign:1,defaultValue:50,color:'#8b5cf6',note:'贡献突出',enabled:true},
+      {id:'active',name:'积极参与',sign:1,defaultValue:30,color:'#10b981',note:'积极活跃',enabled:true},
+      {id:'help',name:'热心帮助',sign:1,defaultValue:30,color:'#0ea5e9',note:'帮助他人',enabled:true},
+      {id:'special',name:'特殊贡献',sign:1,defaultValue:60,color:'#a855f7',note:'特殊贡献',enabled:true},
+    ],
+    members:[
+      {id:1,uid:'10001',nickname:'葫芦侠小A',avatar:'',role:'超级版主',status:'已完成',sendStatus:'已发放',remark:'表现优异，贡献突出',rewards:{best:1,star:1,contrib:1,active:0,help:0,special:0}},
+      {id:2,uid:'10002',nickname:'泳池小透明',avatar:'',role:'版主',status:'已完成',sendStatus:'已发放',remark:'积极活跃',rewards:{best:1,star:0,contrib:0,active:1,help:0,special:0}},
+      {id:3,uid:'10003',nickname:'次元的守护者',avatar:'',role:'版主',status:'已完成',sendStatus:'已发放',remark:'热心帮助成员',rewards:{best:0,star:0,contrib:1,active:0,help:1,special:0}},
+      {id:4,uid:'10004',nickname:'可爱多一点',avatar:'',role:'管理组',status:'已完成',sendStatus:'已发放',remark:'管理有方',rewards:{best:1,star:1,contrib:0,active:0,help:0,special:0}},
+      {id:5,uid:'10005',nickname:'游泳健将',avatar:'',role:'管理组',status:'已完成',sendStatus:'已发放',remark:'贡献突出',rewards:{best:0,star:0,contrib:1,active:0,help:0,special:1}},
+      {id:6,uid:'10006',nickname:'清凉一夏',avatar:'',role:'版主',status:'已完成',sendStatus:'已发放',remark:'积极参与讨论',rewards:{best:0,star:0,contrib:0,active:1,help:1,special:0}},
+      {id:7,uid:'10007',nickname:'浪花朵朵',avatar:'',role:'管理组',status:'已完成',sendStatus:'待发放',remark:'尽职尽责',rewards:{best:1,star:0,contrib:0,active:0,help:0,special:0}},
+      {id:8,uid:'10008',nickname:'水花四溅',avatar:'',role:'版主',status:'已完成',sendStatus:'待发放',remark:'保持活跃',rewards:{best:0,star:0,contrib:0,active:1,help:0,special:0}},
+    ]
+  }
+};
+
+// Export visibility toggles
+const EXP_TOGGLES={
+  showRewardBadges:{label:'奖励徽章',default:true},
+  showRewardValue:{label:'奖励总值',default:true},
+  showStatus:{label:'状态列',default:true},
+  showRemark:{label:'备注列',default:true},
+  showUID:{label:'UID列',default:true},
+  showWatermark:{label:'防伪水印',default:true},
+  showFooter:{label:'底部标语',default:true},
+};
+let expToggles=Object.fromEntries(Object.entries(EXP_TOGGLES).map(([k,v])=>[k,v.default]));
+
+let state=loadState();
+let activeBoard=state.activeBoard||'pool';
+let activePanel=state.activePanel||'dashboard';
+
+const $=(s,root=document)=>root.querySelector(s);
+const $$=(s,root=document)=>[...root.querySelectorAll(s)];
+const loading=$('#loading');
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function uid2(p='id'){return`${p}_${Math.random().toString(36).slice(2,8)}${Date.now().toString(36).slice(-4)}`}
+function clone(x){return JSON.parse(JSON.stringify(x))}
+
+function loadState(){
+  try{const r=localStorage.getItem(STORAGE_KEY);if(!r)return clone(DEFAULTS);return mergeState(JSON.parse(r))}
+  catch(e){return clone(DEFAULTS)}
+}
+function mergeState(saved){
+  const out=clone(DEFAULTS);
+  out.activeBoard=saved.activeBoard||'pool';
+  out.activePanel=saved.activePanel||'dashboard';
+  for(const key of['cyg','pool']){
+    const src=saved[key]||saved.boards?.[key];
+    if(!src)continue;
+    const b=out[key];
+    ['name','title','subtitle','responsible','signature','sealText','period','theme','certNo','footerText'].forEach(f=>{if(src[f])b[f]=src[f]});
+    if(Array.isArray(src.roles))b.roles=src.roles;
+    if(Array.isArray(src.rewardTypes))b.rewardTypes=src.rewardTypes;
+    if(Array.isArray(src.members))b.members=src.members;
+  }
+  return out;
+}
+function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function board(id=activeBoard){return state[id]||DEFAULTS[id]}
+
+function calcTotal(m){
+  const b=board();
+  return(b.rewardTypes||[]).filter(r=>r.enabled!==false).reduce((sum,r)=>sum+Number(m.rewards?.[r.id]||0)*Number(r.sign||1),0);
+}
+
+function applyTheme(themeKey){
+  const t=THEMES[themeKey]||THEMES.default;
+  const root=document.documentElement;
+  root.style.setProperty('--theme-h1',t.h1);
+  root.style.setProperty('--theme-h2',t.h2);
+  root.style.setProperty('--theme-bg1',t.bg1);
+  root.style.setProperty('--theme-bg2',t.bg2);
+  root.style.setProperty('--theme-bg3',t.bg3);
+}
+
+function avatarHtml(avatar,nickname,size=44){
+  if(avatar)return`<img src="${avatar}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+  const first=(nickname||'？').slice(0,1);
+  return`<span style="font-size:${Math.round(size*0.38)}px">${esc(first)}</span>`;
+}
+function memberColorTag(s){return s==='已完成'?'ok':s==='待审核'?'warn':'bad'}
+function sendColorTag(s){return s==='已发放'?'ok':s==='待发放'?'info':'bad'}
+function normalizeColor(v){return/^#[0-9a-f]{6}$/i.test(String(v||''))?v:'#ec4899'}
+
+function setPage(){
+  const b=board();
+  const map={dashboard:'控制台',members:'成员管理',roles:'岗位管理',rewards:'奖励管理',export:'导出中心',settings:'系统设置'};
+  $('#pageTitle').textContent=`${b.name} · ${map[activePanel]}`;
+  $('#pageDesc').textContent=`${b.title}`;
+}
+
+function renderSidebar(){
+  $('#boardTabs').innerHTML=Object.values(state).filter(v=>v&&v.id).map(b=>`
+    <button class="board-btn ${activeBoard===b.id?'active':''}" data-board="${b.id}">
+      <span class="left">
+        <span class="icon">${b.id==='pool'?'🏊':'🌸'}</span>
+        <span><strong>${esc(b.name)}</strong><small>${esc(b.subtitle||'')}</small></span>
+      </span>
+      <span class="pill">${(b.members||[]).length}人</span>
+    </button>
+  `).join('');
+  const navs=[
+    ['dashboard','🏠','控制台','总览'],
+    ['members','👥','成员管理','头像/信息'],
+    ['roles','🧩','岗位管理','独立岗位'],
+    ['rewards','🎁','奖励管理','自定义类型'],
+    ['export','📤','导出中心','PNG海报'],
+    ['settings','⚙','系统设置','主题/认证']
+  ];
+  $('#navTabs').innerHTML=navs.map(([id,icon,title,sub])=>`
+    <button class="nav-btn ${activePanel===id?'active':''}" data-panel="${id}">
+      <span class="left">
+        <span class="icon">${icon}</span>
+        <span><strong>${title}</strong><small>${sub}</small></span>
+      </span>
+    </button>
+  `).join('');
+  $$('#boardTabs [data-board]').forEach(btn=>btn.onclick=()=>{
+    activeBoard=btn.dataset.board;state.activeBoard=activeBoard;saveState();applyTheme(board().theme||'default');render();
+  });
+  $$('#navTabs [data-panel]').forEach(btn=>btn.onclick=()=>{
+    activePanel=btn.dataset.panel;state.activePanel=activePanel;saveState();render();
+  });
+}
+
+/* ══ PANEL RENDERERS ══ */
+function renderDashboard(){
+  const b=board();const s=b.members||[];
+  const total=s.reduce((n,m)=>n+calcTotal(m),0);
+  const active=s.filter(m=>m.status==='已完成').length;
+  return`
+    <div class="panel-head">
+      <div><h3>控制台</h3><p>当前板块综合概览。</p></div>
+      <div class="actions-row">
+        <button class="btn soft" data-act="quick-add">新增成员</button>
+        <button class="btn soft" data-act="quick-export">进入导出</button>
+      </div>
+    </div>
+    <div class="grid-2" style="grid-template-columns:1.2fr .8fr">
+      <div class="card">
+        <h4>板块概览</h4>
+        <div class="overview">
+          <div class="mini"><div class="k">成员数量</div><div class="v">${s.length}</div><div class="s">当前板块</div></div>
+          <div class="mini"><div class="k">活跃成员</div><div class="v">${active}</div><div class="s">已完成</div></div>
+          <div class="mini"><div class="k">岗位数量</div><div class="v">${(b.roles||[]).length}</div><div class="s">独立配置</div></div>
+          <div class="mini"><div class="k">奖励总和</div><div class="v">${total}</div><div class="s">按当前规则</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h4>当前板块信息</h4>
+        <table class="info-table">
+          <tr><td>板块</td><td>${esc(b.name)}</td></tr>
+          <tr><td>负责人</td><td>${esc(b.responsible||'—')}</td></tr>
+          <tr><td>认证</td><td><span class="tag ok">${esc(b.sealText||'已审核通过')}</span></td></tr>
+          <tr><td>周期</td><td>${esc(b.period||'—')}</td></tr>
+          <tr><td>主题</td><td>${THEMES[b.theme||'default']?.name||'默认'}</td></tr>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderMembers(){
+  const b=board();
+  return`
+    <div class="panel-head">
+      <div><h3>成员管理</h3><p>独立成员管理，支持头像上传、岗位选择、奖励编辑。</p></div>
+      <div class="actions-row">
+        <button class="btn soft" data-act="import-members">批量导入</button>
+        <button class="btn soft" data-act="add-member">新增成员</button>
+        <button class="btn soft" data-act="clear-members">清空板块</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="field"><label>搜索</label><input id="mQ" placeholder="昵称/岗位/备注/UID" /></div>
+      <div class="field"><label>考核状态</label><select id="mStatus"><option value="">全部</option><option>已完成</option><option>待审核</option><option>未达标</option></select></div>
+      <div class="field"><label>发放状态</label><select id="mSend"><option value="">全部</option><option>待发放</option><option>已发放</option><option>驳回</option></select></div>
+      <div class="field"><label>岗位</label><select id="mRole"><option value="">全部</option>${(b.roles||[]).map(r=>`<option>${esc(r.name)}</option>`).join('')}</select></div>
+    </div>
+    <div class="grid-2" style="grid-template-columns:1fr .6fr">
+      <div class="card">
+        <h4>成员表格</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:70px">头像</th><th>昵称</th><th>UID</th><th>岗位</th>
+              <th>考核</th><th>发放</th><th>奖励</th><th>备注</th><th>操作</th>
+            </tr></thead>
+            <tbody id="memberTbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h4>说明</h4>
+        <div class="info">头像导出时直接显示；无头像显示昵称首字。<br>建议上传 1:1 方图。</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRoles(){
+  return`
+    <div class="panel-head">
+      <div><h3>岗位管理</h3><p>岗位完全独立配置。</p></div>
+      <div class="actions-row">
+        <button class="btn soft" data-act="add-role">新增岗位</button>
+        <button class="btn soft" data-act="reset-role">恢复默认</button>
+      </div>
+    </div>
+    <div class="grid-2" style="grid-template-columns:1fr .7fr">
+      <div class="card"><h4>岗位列表</h4><div id="roleList" class="list"></div></div>
+      <div class="card"><h4>说明</h4><div class="info">岗位只保留名称和说明。导出时岗位在成员表中同步显示。</div></div>
+    </div>
+  `;
+}
+
+function rewardRuleText(){
+  const b=board();
+  return(b.rewardTypes||[]).filter(r=>r.enabled!==false).map(r=>`${r.name}${r.sign<0?'（扣除）':''}`).join(' + ')||'暂无奖励类型';
+}
+
+function renderRewards(){
+  return`
+    <div class="panel-head">
+      <div><h3>奖励管理</h3><p>自定义奖励类型，导出时完整展示。</p></div>
+      <div class="actions-row">
+        <button class="btn soft" data-act="add-reward">新增奖励类型</button>
+        <button class="btn soft" data-act="reset-reward">恢复默认</button>
+      </div>
+    </div>
+    <div class="grid-2" style="grid-template-columns:1fr .7fr">
+      <div class="card" style="overflow:visible">
+        <h4>奖励类型</h4>
+        <div id="rewardList" class="reward-grid"></div>
+      </div>
+      <div class="card">
+        <h4>当前规则</h4>
+        <div class="info">${rewardRuleText()}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* Export Panel */
+function renderExport(){
+  const b=board();
+  const togglesHtml=Object.entries(EXP_TOGGLES).map(([k,v])=>`
+    <label class="toggle-chip ${expToggles[k]?'active':''}" data-toggle="${k}">
+      <input type="checkbox" ${expToggles[k]?'checked':''} style="display:none"> ${v.label}
+    </label>
+  `).join('');
+
+  return`
+    <div class="panel-head">
+      <div><h3>导出中心</h3><p>海报级横版导出，参照公示单样式，支持选择导出内容。</p></div>
+      <div class="actions-row">
+        <button class="btn soft" data-act="check-export">检查完整性</button>
+        <button class="btn good" data-act="export-png">📸 导出 PNG 海报</button>
+        <button class="btn warn" data-act="export-pdf">🖨 打印/PDF</button>
+      </div>
+    </div>
+    <div class="export-controls">
+      <div class="card"><h4>负责人</h4>
+        <div class="field"><label>负责人</label><input id="exResp" value="${esc(b.responsible||'')}" /></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>签名</label><input id="exSign" value="${esc(b.signature||'')}" /></div>
+      </div>
+      <div class="card"><h4>公示信息</h4>
+        <div class="field"><label>标题</label><input id="exTitle" value="${esc(b.title||'')}" /></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>认证文案</label><input id="exSeal" value="${esc(b.sealText||'')}" /></div>
+      </div>
+      <div class="card"><h4>认证编号</h4>
+        <div class="field"><label>认证编号</label><input id="exCertNo" value="${esc(b.certNo||'')}" /></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>底部标语</label><input id="exFooter" value="${esc(b.footerText||'')}" /></div>
+      </div>
+      <div class="card"><h4>说明</h4>
+        <div class="info" style="font-size:10px">导出 PNG 为高清海报图，可直接用于社区发布。<br>导出内容可在下方选择切换。</div>
+      </div>
+    </div>
+    <div class="export-toggle-row">
+      <span style="font-size:11px;color:#6b7280;font-weight:600;margin-right:4px">导出内容：</span>
+      ${togglesHtml}
+    </div>
+    <div class="export-shell" style="margin-top:10px">
+      <div class="export-paper" id="exportPaper">
+        <!-- Watermark -->
+        <div class="poster-watermark" id="expWatermark">
+          <div class="watermark-text" id="expWatermarkText">HULUXIA OFFICIAL</div>
+        </div>
+        <!-- POSTER HEADER -->
+        <div class="poster-header" id="expHeader">
+          <!-- Title row: centered big title -->
+          <div class="poster-title-row">
+            <div class="poster-site-tag">HULUXIA SWIMMING POOL MANAGEMENT TEAM</div>
+            <h1 class="poster-main-title" id="expMainTitle">板块名称</h1>
+            <p class="poster-sub-title" id="expSubTitle">月度奖励公示单</p>
+            <div><span class="poster-period-badge" id="expPeriodBadge">公示周期：—</span></div>
+          </div>
+          <!-- Info row -->
+          <div class="poster-info-row">
+            <!-- Board info -->
+            <div class="poster-board-info" id="expBoardInfo">
+              <h4>板块信息</h4>
+              <p id="expBoardInfoLines">加载中…</p>
+            </div>
+            <!-- Stats -->
+            <div class="poster-stats-block">
+              <div style="width:100%">
+                <h4>统计信息</h4>
+                <div class="poster-stats-inner">
+                  <div class="p-stat"><div class="sv" id="expStatMembers">0</div><div class="sk">成员总数</div></div>
+                  <div class="p-stat"><div class="sv" id="expStatRoles">0</div><div class="sk">岗位总数</div></div>
+                  <div class="p-stat"><div class="sv" id="expStatRewards">0</div><div class="sk">奖励总数</div></div>
+                  <div class="p-stat"><div class="sv" id="expStatActive">0</div><div class="sk">活跃人数</div></div>
+                </div>
+              </div>
+            </div>
+            <!-- Cert -->
+            <div class="poster-cert-block" id="expCertBlock">
+              <div class="cert-stamp" id="expStamp">
+                <div class="crown">👑</div>
+                <div class="main-text">官方认证<br>已审核通过</div>
+                <div class="sub-text">OFFICIAL CERTIFIED</div>
+              </div>
+              <div class="cert-meta" id="expCertMeta">认证编号：—<br>审核时间：—</div>
+              <div style="font-size:11px;color:#374151;margin-top:2px">负责人签名：</div>
+              <div class="cert-sig" id="expCertSig">—</div>
+            </div>
+          </div>
+        </div>
+        <!-- POSTER BODY -->
+        <div class="poster-body">
+          <div class="poster-section-label">
+            <strong>成员奖励明细</strong>
+            <span id="expRowCount">0 条记录</span>
+          </div>
+          <div class="exp-table-wrap">
+            <table class="exp-table" id="expTable"></table>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div class="poster-footer" id="expFooter">✦ 感谢每一位成员的付出与努力 ✦</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSettings(){
+  const b=board();
+  const themeSwatches=Object.entries(THEMES).map(([k,t])=>`
+    <div class="theme-swatch ${(b.theme||'default')===k?'active':''}" data-theme="${k}">
+      <div class="swatch-bar" style="background:linear-gradient(135deg,${t.h1},${t.h2})"></div>
+      ${t.name}
+    </div>
+  `).join('');
+  return`
+    <div class="panel-head">
+      <div><h3>系统设置</h3><p>板块名称、标题、负责人、主题。</p></div>
+      <div class="actions-row"><button class="btn soft" data-act="reset-board">重置当前板块</button></div>
+    </div>
+    <div class="grid-2" style="grid-template-columns:1fr .9fr">
+      <div class="card">
+        <h4>板块设置</h4>
+        <div class="split">
+          <div class="field"><label>板块名称</label><input id="setName" value="${esc(b.name)}" /></div>
+          <div class="field"><label>系统标题</label><input id="setTitle" value="${esc(b.title)}" /></div>
+          <div class="field"><label>公示周期</label><input id="setPeriod" value="${esc(b.period)}" placeholder="如 2025-05" /></div>
+          <div class="field"><label>认证文案</label><input id="setSeal" value="${esc(b.sealText)}" /></div>
+          <div class="field"><label>负责人</label><input id="setResp" value="${esc(b.responsible)}" /></div>
+          <div class="field"><label>签名</label><input id="setSign" value="${esc(b.signature)}" /></div>
+        </div>
+        <div style="height:8px"></div>
+        <div class="field"><label>认证编号</label><input id="setCertNo" value="${esc(b.certNo||'')}" /></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>板块说明</label><textarea id="setSubtitle">${esc(b.subtitle)}</textarea></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>底部标语</label><input id="setFooter" value="${esc(b.footerText||'')}" /></div>
+      </div>
+      <div class="card">
+        <h4>页面主题</h4>
+        <div class="theme-grid" id="themeGrid">${themeSwatches}</div>
+        <div style="height:10px"></div>
+        <div class="info">主题影响导出海报的配色风格。</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ══ LIST RENDERERS ══ */
+function renderMemberTable(){
+  const b=board();
+  const f={q:$('#mQ')?.value||'',status:$('#mStatus')?.value||'',send:$('#mSend')?.value||'',role:$('#mRole')?.value||''};
+  const rows=(b.members||[]).filter(m=>{
+    const text=[m.nickname,m.uid,m.role,m.status,m.sendStatus,m.remark].join(' ').toLowerCase();
+    if(f.q&&!text.includes(f.q.trim().toLowerCase()))return false;
+    if(f.status&&m.status!==f.status)return false;
+    if(f.send&&m.sendStatus!==f.send)return false;
+    if(f.role&&m.role!==f.role)return false;
+    return true;
+  }).map(m=>`
+    <tr data-mid="${m.id}">
+      <td><div style="width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#f9a8d4,#c4b5fd);color:#fff;font-weight:800;overflow:hidden">${avatarHtml(m.avatar,m.nickname,46)}</div></td>
+      <td><input class="cell" data-f="nickname" value="${esc(m.nickname||'')}" /></td>
+      <td><input class="cell" data-f="uid" value="${esc(m.uid||'')}" /></td>
+      <td><select class="cell" data-f="role">${(b.roles||[]).map(r=>`<option value="${esc(r.name)}" ${r.name===m.role?'selected':''}>${esc(r.name)}</option>`).join('')}</select></td>
+      <td><select class="cell" data-f="status">${['已完成','待审核','未达标'].map(v=>`<option ${v===m.status?'selected':''}>${v}</option>`).join('')}</select></td>
+      <td><select class="cell" data-f="sendStatus">${['待发放','已发放','驳回'].map(v=>`<option ${v===m.sendStatus?'selected':''}>${v}</option>`).join('')}</select></td>
+      <td><strong>${calcTotal(m)}</strong></td>
+      <td><input class="cell" data-f="remark" value="${esc(m.remark||'')}" /></td>
+      <td><div class="actions-row">
+        <button class="mini-btn primary" data-act="edit">编辑</button>
+        <button class="mini-btn good" data-act="copy">复制</button>
+        <button class="mini-btn bad" data-act="del">删</button>
+      </div></td>
+    </tr>
+  `).join('');
+  $('#memberTbody').innerHTML=rows||`<tr><td colspan="9"><div class="empty">当前板块暂无成员。</div></td></tr>`;
+  $$('#memberTbody tr[data-mid]').forEach(tr=>{
+    const id=Number(tr.dataset.mid);
+    tr.querySelectorAll('[data-f]').forEach(inp=>{
+      const sync=()=>{
+        const m=board().members.find(x=>x.id===id);
+        if(!m)return;
+        m[inp.dataset.f]=inp.value;
+        saveState();
+        if(activePanel==='export')renderExportPaper();
+      };
+      inp.addEventListener('input',sync);
+      inp.addEventListener('change',sync);
+    });
+    tr.querySelector('[data-act="edit"]').onclick=()=>openMemberModal(id);
+    tr.querySelector('[data-act="copy"]').onclick=()=>copyMember(id);
+    tr.querySelector('[data-act="del"]').onclick=()=>deleteMember(id);
+  });
+}
+
+function renderRoleList(){
+  const b=board();
+  $('#roleList').innerHTML=(b.roles||[]).map(r=>`
+    <div class="list-item" data-rid="${r.id}">
+      <div class="row">
+        <div>
+          <input class="cell" data-f="name" value="${esc(r.name)}" />
+          <div style="height:5px"></div>
+          <input class="cell" data-f="note" value="${esc(r.note||'')}" placeholder="岗位说明" />
+        </div>
+        <div class="info" style="background:#fafafa;color:#6b7280;border-color:#e5e7eb;font-size:10px">序号 ${r.id}</div>
+        <div class="actions-row">
+          <button class="mini-btn warn" data-act="up">上移</button>
+          <button class="mini-btn warn" data-act="down">下移</button>
+          <button class="mini-btn bad" data-act="del">删除</button>
+        </div>
+      </div>
+    </div>
+  `).join('')||`<div class="empty">暂无岗位。</div>`;
+  $$('#roleList [data-rid]').forEach(el=>{
+    const id=Number(el.dataset.rid);
+    el.querySelectorAll('[data-f]').forEach(inp=>inp.addEventListener('input',()=>{
+      const item=board().roles.find(x=>x.id===id);
+      if(!item)return;
+      item[inp.dataset.f]=inp.value;
+      saveState();
+    }));
+    el.querySelector('[data-act="up"]').onclick=()=>moveRole(id,-1);
+    el.querySelector('[data-act="down"]').onclick=()=>moveRole(id,1);
+    el.querySelector('[data-act="del"]').onclick=()=>deleteRole(id);
+  });
+}
+
+function renderRewardList(){
+  const b=board();
+  $('#rewardList').innerHTML=(b.rewardTypes||[]).map(r=>`
+    <div class="reward-item" data-rid="${r.id}">
+      <div class="reward-top">
+        <div style="flex:1;min-width:0">
+          <input class="cell" data-f="name" value="${esc(r.name)}" style="width:100%;margin-bottom:3px" />
+          <div class="reward-tags">
+            <span class="reward-tag ${r.sign<0?'bad':'ok'}" style="${r.sign<0?'background:#fef2f2;border-color:#fecaca;color:#b91c1c':'background:#ecfdf5;border-color:#bbf7d0;color:#047857'}">${r.sign<0?'扣除':'加分'}</span>
+            ${r.enabled===false?'<span class="reward-tag" style="background:#f9fafb;color:#94a3b8">已禁用</span>':''}
+          </div>
+        </div>
+      </div>
+      <div class="reward-ctrl">
+        <input data-f="note" value="${esc(r.note||'')}" placeholder="说明" />
+        <input data-f="defaultValue" type="number" min="0" value="${Number(r.defaultValue||0)}" placeholder="默认值" />
+        <select data-f="sign">
+          <option value="1" ${Number(r.sign||1)===1?'selected':''}>加分</option>
+          <option value="-1" ${Number(r.sign||1)===-1?'selected':''}>扣分</option>
+        </select>
+        <input data-f="color" type="color" value="${normalizeColor(r.color)}" style="padding:2px;height:36px;width:100%" />
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:7px;margin-top:9px;flex-wrap:wrap">
+        <label class="tag" style="cursor:pointer"><input type="checkbox" data-f="enabled" ${r.enabled!==false?'checked':''} /> 启用</label>
+        <div class="actions-row">
+          <button class="mini-btn warn" data-act="copy">复制</button>
+          <button class="mini-btn bad" data-act="del">删除</button>
+        </div>
+      </div>
+    </div>
+  `).join('')||`<div class="empty">暂无奖励类型。</div>`;
+  $$('#rewardList [data-rid]').forEach(el=>{
+    const id=el.dataset.rid;
+    el.querySelectorAll('[data-f]').forEach(inp=>{
+      const sync=()=>updateRewardField(id,inp);
+      inp.addEventListener('input',sync);
+      inp.addEventListener('change',sync);
+    });
+    el.querySelector('[data-act="copy"]').onclick=()=>copyReward(id);
+    el.querySelector('[data-act="del"]').onclick=()=>deleteReward(id);
+  });
+}
+
+/* ══ EXPORT PAPER RENDERER ══ */
+function renderExportPaper(){
+  const b=board();
+  if(!$('#expMainTitle'))return;
+
+  const members=b.members||[];
+  const rewardTypes=(b.rewardTypes||[]).filter(r=>r.enabled!==false);
+  const totalRewards=members.reduce((n,m)=>n+calcTotal(m),0);
+  const activeMembers=members.filter(m=>m.status==='已完成').length;
+
+  // Watermark
+  const wm=$('#expWatermark');
+  if(wm)wm.style.display=expToggles.showWatermark?'flex':'none';
+  const wmText=$('#expWatermarkText');
+  if(wmText)wmText.textContent=`${b.name} · ${b.responsible||'OFFICIAL'} · HULUXIA`;
+
+  // Header title
+  $('#expMainTitle').textContent=b.name||'—';
+  $('#expSubTitle').textContent=b.title||'月度奖励公示单';
+
+  // Period badge - format nicely
+  const periodStr=b.period||'—';
+  let periodDisplay=`公示周期：${periodStr}`;
+  // Try to parse YYYY-MM format and show full month range
+  if(/^\d{4}-\d{2}$/.test(periodStr)){
+    const [y,mo]=periodStr.split('-');
+    const lastDay=new Date(Number(y),Number(mo),0).getDate();
+    periodDisplay=`公示周期：${y}年${Number(mo)}月1日 - ${y}年${Number(mo)}月${lastDay}日`;
+  }
+  $('#expPeriodBadge').textContent=periodDisplay;
+
+  // Board info (clean - no members/roles/rewardTypes detail)
+  $('#expBoardInfoLines').innerHTML=`
+    板块名称：${esc(b.name)}<br>
+    负 责 人：${esc(b.responsible||'—')}<br>
+    管理团队：${esc(b.name)}管理组<br>
+    成员总数：${members.length}人
+  `;
+
+  // Stats
+  $('#expStatMembers').textContent=members.length;
+  $('#expStatRoles').textContent=(b.roles||[]).length;
+  $('#expStatRewards').textContent=totalRewards;
+  $('#expStatActive').textContent=activeMembers;
+
+  // Cert
+  $('#expStamp').innerHTML=`
+    <div class="crown">👑</div>
+    <div class="main-text" style="font-size:11px;font-weight:900;line-height:1.2">官方认证<br>${esc(b.sealText||'已审核通过')}</div>
+    <div class="sub-text" style="font-size:8px;letter-spacing:.04em">OFFICIAL CERTIFIED</div>
+  `;
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  $('#expCertMeta').innerHTML=`认证编号：<strong>${esc(b.certNo||'—')}</strong><br>审核时间：${dateStr}`;
+  $('#expCertSig').textContent=b.signature||b.responsible||'—';
+
+  // Row count
+  $('#expRowCount').textContent=`${members.length} 条记录`;
+
+  // Footer
+  const footer=$('#expFooter');
+  if(footer){
+    footer.style.display=expToggles.showFooter?'':'none';
+    footer.textContent=`✦ ${b.footerText||'感谢每一位成员的付出与努力！'} ✦`;
+  }
+
+  // Build table
+  const table=$('#expTable');
+  if(!table)return;
+
+  // Build columns based on toggles
+  const showUID=expToggles.showUID;
+  const showStatus=expToggles.showStatus;
+  const showRemark=expToggles.showRemark;
+  const showBadges=expToggles.showRewardBadges;
+  const showValue=expToggles.showRewardValue;
+
+  // Count visible cols for colspan
+  let colCount=3; // seq + avatar+name + role
+  if(showUID)colCount++;
+  if(showBadges)colCount++;
+  if(showValue)colCount++;
+  if(showStatus)colCount+=2;
+  if(showRemark)colCount++;
+
+  table.innerHTML=`
+    <thead>
+      <tr>
+        <th style="width:48px;text-align:center">序号</th>
+        <th style="text-align:left;padding-left:12px">成员信息</th>
+        <th style="text-align:center">岗位</th>
+        ${showUID?`<th>UID</th>`:''}
+        ${showBadges?`<th style="text-align:left">获得奖励</th>`:''}
+        ${showValue?`<th>奖励值</th>`:''}
+        ${showStatus?`<th>状态</th><th>发放</th>`:''}
+        ${showRemark?`<th style="text-align:left">备注</th>`:''}
+      </tr>
+    </thead>
+    <tbody>
+      ${members.length?members.map((m,idx)=>{
+        const total=calcTotal(m);
+        // Build reward badges
+        const earnedRewards=rewardTypes.filter(r=>{
+          const v=Number(m.rewards?.[r.id]||0);
+          return r.sign>0?v>0:v>0;
+        });
+        const badgesHtml=earnedRewards.slice(0,6).map(r=>{
+          const color=normalizeColor(r.color);
+          const v=Number(m.rewards?.[r.id]||0);
+          // Check if the reward is count-based (small numbers 0-3) or value-based
+          const isCount=v<=5&&Number(r.defaultValue||0)<=5;
+          // Light pastel version of color for bg
+          return`<span class="rw-badge" style="background:${color}22;color:${color};border:1px solid ${color}44;margin:2px 3px 2px 0">${esc(r.name)}</span>`;
+        }).join('');
+
+        return`
+          <tr>
+            <td style="text-align:center;font-weight:700;color:#6d28d9;font-size:14px">${idx+1}</td>
+            <td style="text-align:left">
+              <div style="display:flex;align-items:center;gap:10px;padding-left:4px">
+                <div class="exp-avatar">${avatarHtml(m.avatar,m.nickname,44)}</div>
+                <div>
+                  <div style="font-weight:700;font-size:13px;color:#111827">${esc(m.nickname||'—')}</div>
+                  <div style="font-size:10px;color:#94a3b8">ID: ${esc(m.uid||'—')}</div>
+                </div>
+              </div>
+            </td>
+            <td style="text-align:center;font-weight:600;color:#374151">${esc(m.role||'—')}</td>
+            ${showUID?`<td style="color:#94a3b8;font-size:11px;text-align:center">${esc(m.uid||'—')}</td>`:''}
+            ${showBadges?`<td style="text-align:left">${badgesHtml||'<span style="color:#94a3b8;font-size:11px">暂无</span>'}</td>`:''}
+            ${showValue?`<td style="text-align:center"><strong style="color:#6d28d9;font-size:15px">${total}</strong></td>`:''}
+            ${showStatus?`
+              <td style="text-align:center"><span class="tag ${memberColorTag(m.status)}">${esc(m.status||'—')}</span></td>
+              <td style="text-align:center"><span class="tag ${sendColorTag(m.sendStatus)}">${esc(m.sendStatus||'—')}</span></td>
+            `:''}
+            ${showRemark?`<td style="text-align:left;color:#4b5563;font-size:11px">${esc(m.remark||'')}</td>`:''}
+          </tr>
+        `;
+      }).join(''):`<tr><td colspan="${colCount}"><div class="empty">当前板块暂无成员。</div></td></tr>`}
+    </tbody>
+  `;
+}
+
+/* ══ BIND PANEL ══ */
+function bindPanel(){
+  $('[data-act="quick-add"]')?.addEventListener('click',openMemberModal);
+  $('[data-act="quick-export"]')?.addEventListener('click',()=>{activePanel='export';state.activePanel='export';saveState();render()});
+  $('#mQ')?.addEventListener('input',()=>renderMemberTable());
+  $('#mStatus')?.addEventListener('change',()=>renderMemberTable());
+  $('#mSend')?.addEventListener('change',()=>renderMemberTable());
+  $('#mRole')?.addEventListener('change',()=>renderMemberTable());
+  $('[data-act="import-members"]')?.addEventListener('click',openImportModal);
+  $('[data-act="add-member"]')?.addEventListener('click',()=>openMemberModal());
+  $('[data-act="clear-members"]')?.addEventListener('click',clearMembers);
+  $('[data-act="add-role"]')?.addEventListener('click',addRole);
+  $('[data-act="reset-role"]')?.addEventListener('click',resetRoles);
+  $('[data-act="add-reward"]')?.addEventListener('click',addReward);
+  $('[data-act="reset-reward"]')?.addEventListener('click',resetRewards);
+  $('[data-act="check-export"]')?.addEventListener('click',()=>{if(validateExport())alert('完整性检查通过。')});
+  $('[data-act="export-png"]')?.addEventListener('click',exportPNG);
+  $('[data-act="export-pdf"]')?.addEventListener('click',printPDF);
+  $('[data-act="reset-board"]')?.addEventListener('click',resetBoard);
+  $('#btnSave').onclick=()=>{saveState();alert('已保存')};
+  $('#btnAddMember').onclick=()=>{activePanel='members';state.activePanel='members';render();openMemberModal()};
+  $('#btnExportPNG').onclick=exportPNG;
+  $('#btnExportPDF').onclick=printPDF;
+
+  // Export toggles
+  $$('.toggle-chip[data-toggle]').forEach(chip=>{
+    chip.onclick=()=>{
+      const k=chip.dataset.toggle;
+      expToggles[k]=!expToggles[k];
+      chip.classList.toggle('active',expToggles[k]);
+      chip.querySelector('input').checked=expToggles[k];
+      renderExportPaper();
+    };
+  });
+
+  // Export input bindings
+  if(activePanel==='export'){
+    [['exResp','responsible'],['exSign','signature'],['exTitle','title'],['exSeal','sealText'],['exCertNo','certNo'],['exFooter','footerText']].forEach(([eid,bfield])=>{
+      const node=$('#'+eid);
+      if(!node)return;
+      node.oninput=()=>{
+        board()[bfield]=node.value.trim();
+        saveState();renderExportPaper();renderSidebar();setPage();
+      };
+    });
+  }
+
+  if(activePanel==='settings'){
+    bindSettingsFields();
+    // Theme swatches
+    $$('#themeGrid [data-theme]').forEach(sw=>{
+      sw.onclick=()=>{
+        const k=sw.dataset.theme;
+        board().theme=k;
+        saveState();
+        applyTheme(k);
+        $$('#themeGrid [data-theme]').forEach(s=>s.classList.toggle('active',s.dataset.theme===k));
+      };
+    });
+  }
+}
+
+function bindSettingsFields(){
+  const fields=[
+    ['setName','name'],['setTitle','title'],['setPeriod','period'],['setSeal','sealText'],
+    ['setSubtitle','subtitle'],['setResp','responsible'],['setSign','signature'],
+    ['setCertNo','certNo'],['setFooter','footerText']
+  ];
+  fields.forEach(([id,field])=>{
+    const node=$('#'+id);
+    if(!node)return;
+    node.oninput=()=>{
+      board()[field]=node.value;
+      saveState();
+      if(activePanel==='export')renderExportPaper();
+      renderSidebar();setPage();
+    };
+  });
+}
+
+/* ══ MAIN RENDER ══ */
+function render(){
+  try{
+    renderSidebar();setPage();
+    $$('.panel').forEach(p=>p.classList.remove('active'));
+    const panel=$('#panel-'+activePanel)||$('#panel-dashboard');
+    panel.classList.add('active');
+    panel.innerHTML=
+      activePanel==='dashboard'?renderDashboard():
+      activePanel==='members'?renderMembers():
+      activePanel==='roles'?renderRoles():
+      activePanel==='rewards'?renderRewards():
+      activePanel==='export'?renderExport():
+      activePanel==='settings'?renderSettings():
+      `<div class="empty">页面不存在。</div>`;
+    bindPanel();
+    if(activePanel==='members')renderMemberTable();
+    if(activePanel==='roles')renderRoleList();
+    if(activePanel==='rewards')renderRewardList();
+    if(activePanel==='export')renderExportPaper();
+    saveState();
+  }catch(err){
+    console.error(err);
+    const p=$('#panel-'+activePanel)||$('#panel-dashboard');
+    p.classList.add('active');
+    p.innerHTML=`<div class="empty">页面加载失败，请刷新。<br><small>${err.message}</small></div>`;
+  }
+}
+
+/* ══ DATA OPERATIONS ══ */
+function moveRole(id,delta){
+  const b=board();const idx=b.roles.findIndex(x=>x.id===id);const next=idx+delta;
+  if(idx<0||next<0||next>=b.roles.length)return;
+  [b.roles[idx],b.roles[next]]=[b.roles[next],b.roles[idx]];
+  b.roles=b.roles.map((r,i)=>({...r,id:i+1}));
+  saveState();renderRoleList();
+}
+function deleteRole(id){
+  const b=board();
+  if(b.roles.length<=1)return alert('至少保留一个岗位。');
+  if(!confirm('删除该岗位？'))return;
+  b.roles=b.roles.filter(x=>x.id!==id).map((r,i)=>({...r,id:i+1}));
+  b.members.forEach(m=>{if(!b.roles.some(r=>r.name===m.role))m.role=b.roles[0]?.name||''});
+  saveState();renderRoleList();renderMemberTable();
+}
+function addRole(){
+  const b=board();const next=b.roles.length?Math.max(...b.roles.map(x=>x.id))+1:1;
+  b.roles.push({id:next,name:`新岗位${next}`,note:''});
+  saveState();renderRoleList();
+}
+function resetRoles(){state[activeBoard].roles=clone(DEFAULTS[activeBoard].roles);saveState();render()}
+
+function normalizeRewardInput(inp){
+  if(inp.dataset.f==='defaultValue'||inp.dataset.f==='sign')return Number(inp.value||0);
+  if(inp.dataset.f==='enabled')return inp.checked;
+  return inp.value;
+}
+function updateRewardField(id,inp){
+  const item=board().rewardTypes.find(x=>x.id===id);
+  if(!item)return;
+  item[inp.dataset.f]=normalizeRewardInput(inp);
+  saveState();
+  if(activePanel==='export')renderExportPaper();
+  const el=$(`[data-rid="${id}"] .reward-tags`);
+  if(el){
+    const isDeduct=item.sign<0;
+    const isDisabled=item.enabled===false;
+    el.innerHTML=`
+      <span class="reward-tag" style="${isDeduct?'background:#fef2f2;border-color:#fecaca;color:#b91c1c':'background:#ecfdf5;border-color:#bbf7d0;color:#047857'}">${isDeduct?'扣除':'加分'}</span>
+      ${isDisabled?'<span class="reward-tag" style="background:#f9fafb;color:#94a3b8">已禁用</span>':''}
+    `;
+  }
+}
+function addReward(){
+  const b=board();
+  b.rewardTypes.push({id:uid2('rw'),name:'自定义奖励',sign:1,defaultValue:0,color:'#ec4899',note:'新奖励类型',enabled:true});
+  saveState();renderRewardList();
+}
+function copyReward(id){
+  const b=board();const src=b.rewardTypes.find(x=>x.id===id);if(!src)return;
+  const cp=clone(src);cp.id=uid2('rw');cp.name+='（副本）';b.rewardTypes.push(cp);
+  saveState();renderRewardList();
+}
+function deleteReward(id){
+  const b=board();
+  if(b.rewardTypes.length<=1)return alert('至少保留一个奖励类型。');
+  if(!confirm('删除该奖励类型？'))return;
+  b.rewardTypes=b.rewardTypes.filter(x=>x.id!==id);
+  b.members.forEach(m=>{if(m.rewards)delete m.rewards[id]});
+  saveState();renderRewardList();renderMemberTable();
+}
+function resetRewards(){state[activeBoard].rewardTypes=clone(DEFAULTS[activeBoard].rewardTypes);saveState();render()}
+
+function copyMember(id){
+  const b=board();const src=b.members.find(x=>x.id===id);if(!src)return;
+  const cp=clone(src);cp.id=b.members.length?Math.max(...b.members.map(x=>x.id))+1:1;
+  cp.nickname+='（副本）';b.members.unshift(cp);
+  saveState();renderMemberTable();
+}
+function deleteMember(id){
+  const b=board();
+  if(!confirm('删除该成员？'))return;
+  b.members=b.members.filter(x=>x.id!==id);
+  saveState();renderMemberTable();if(activePanel==='export')renderExportPaper();
+}
+function clearMembers(){
+  if(!confirm('清空当前板块全部成员？'))return;
+  board().members=[];saveState();renderMemberTable();
+}
+function resetBoard(){
+  if(!confirm('重置当前板块？会恢复默认岗位、奖励和模板，成员保留。'))return;
+  const members=state[activeBoard].members;
+  state[activeBoard]=clone(DEFAULTS[activeBoard]);
+  state[activeBoard].members=members;
+  saveState();render();
+}
+function validateExport(){
+  const b=board();const issues=[];
+  if(!b.responsible)issues.push('负责人缺失');
+  if(!b.signature)issues.push('签名缺失');
+  if(!(b.members||[]).length)issues.push('成员为空');
+  if(issues.length){alert('导出检查未通过：\n- '+issues.join('\n- '));return false}
+  return true;
+}
+
+/* ══ EXPORT FUNCTIONS ══ */
+async function exportPNG(){
+  if(activePanel!=='export'){activePanel='export';state.activePanel='export';render();await nextFrame()}
+  const paper=$('#exportPaper');
+  if(!paper)return;
+  loading.classList.add('show');
+  try{
+    const origWidth=paper.style.width;
+    paper.style.width='1600px';
+    await nextFrame();
+    const canvas=await html2canvas(paper,{
+      backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,
+      logging:false,scrollX:0,scrollY:0,
+      width:1600,height:paper.scrollHeight,windowWidth:1700,
+    });
+    paper.style.width=origWidth;
+    const url=canvas.toDataURL('image/png');
+    download(url,`${board().name}_${board().period}_公示海报.png`);
+  }catch(err){
+    console.error(err);
+    alert('导出图片失败，请使用打印/PDF。');
+  }finally{loading.classList.remove('show')}
+}
+function printPDF(){
+  if(activePanel!=='export'){activePanel='export';state.activePanel='export';render()}
+  setTimeout(()=>window.print(),120);
+}
+function download(url,filename){const a=document.createElement('a');a.href=url;a.download=filename;a.click()}
+function nextFrame(){return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))}
+
+function fileToDataURL(file,maxW=240,maxH=240){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const ratio=Math.min(maxW/img.width,maxH/img.height,1);
+        const w=Math.max(1,Math.round(img.width*ratio));
+        const h=Math.max(1,Math.round(img.height*ratio));
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',.92));
+      };
+      img.onerror=reject;
+      img.src=reader.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function showModal(){$('#modalMask').classList.add('show')}
+function hideModal(){$('#modalMask').classList.remove('show')}
+$('#modalClose').onclick=hideModal;
+$('#modalMask').onclick=e=>{if(e.target===$('#modalMask'))hideModal()};
+
+/* ══ MEMBER MODAL ══ */
+function openMemberModal(id=null){
+  const b=board();
+  const m=id?clone(b.members.find(x=>x.id===id)):{
+    id:b.members.length?Math.max(...b.members.map(x=>x.id))+1:1,
+    uid:`${b.id.toUpperCase()}${String((b.members.length||0)+1).padStart(3,'0')}`,
+    nickname:'',avatar:'',role:b.roles[0]?.name||'',
+    status:'待审核',sendStatus:'待发放',remark:'',
+    rewards:Object.fromEntries((b.rewardTypes||[]).map(r=>[r.id,Number(r.defaultValue||0)]))
+  };
+  $('#modalTitle').textContent=id?'编辑成员':'新增成员';
+  $('#modalDesc').textContent='支持头像上传、岗位选择、状态维护与奖励明细。';
+  $('#modalBody').innerHTML=`
+    <div class="split">
+      <div class="card">
+        <h4>基础信息</h4>
+        <div class="field"><label>昵称</label><input id="mmNick" value="${esc(m.nickname||'')}" /></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>UID</label><input id="mmUid" value="${esc(m.uid||'')}" /></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>岗位</label><select id="mmRole">${(b.roles||[]).map(r=>`<option value="${esc(r.name)}" ${r.name===m.role?'selected':''}>${esc(r.name)}</option>`).join('')}</select></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>考核状态</label><select id="mmStatus">${['已完成','待审核','未达标'].map(v=>`<option ${v===m.status?'selected':''}>${v}</option>`).join('')}</select></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>发放状态</label><select id="mmSend">${['待发放','已发放','驳回'].map(v=>`<option ${v===m.sendStatus?'selected':''}>${v}</option>`).join('')}</select></div>
+        <div style="height:5px"></div>
+        <div class="field"><label>备注</label><textarea id="mmRemark">${esc(m.remark||'')}</textarea></div>
+      </div>
+      <div class="card">
+        <h4>头像上传</h4>
+        <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+          <div id="avatarPreview" style="width:76px;height:76px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(135deg,#f9a8d4,#c4b5fd);color:#fff;font-weight:800;overflow:hidden;border:1px solid #f3c4da;flex:none">${m.avatar?`<img src="${m.avatar}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:24px">${esc((m.nickname||'？').slice(0,1))}</span>`}</div>
+          <div style="font-size:11px;color:#64748b;line-height:1.7">导出时显示头像；<br>未上传显示昵称首字。</div>
+        </div>
+        <div style="height:7px"></div>
+        <button class="btn soft" id="pickAvatar">上传头像</button>
+        <button class="btn soft" id="clearAvatar" style="margin-left:5px">清除</button>
+        <input type="hidden" id="mmAvatar" value="${esc(m.avatar||'')}" />
+        <div style="height:10px"></div>
+        <h4>奖励明细</h4>
+        <div class="reward-grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
+          ${(b.rewardTypes||[]).filter(r=>r.enabled!==false).map(r=>`
+            <div class="field">
+              <label style="display:flex;align-items:center;gap:4px">
+                <span style="width:8px;height:8px;border-radius:50%;background:${normalizeColor(r.color)};flex:none"></span>
+                ${esc(r.name)}${r.sign<0?' (扣)':''}
+              </label>
+              <input type="number" min="0" id="rw_${r.id}" value="${Number(m.rewards?.[r.id]||0)}" />
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  $('#modalFoot').innerHTML=`<button class="btn soft" id="cancelMember">取消</button><button class="btn primary" id="saveMember">保存</button>`;
+  showModal();
+  $('#cancelMember').onclick=hideModal;
+  $('#pickAvatar').onclick=()=>$('#avatarInput').click();
+  $('#clearAvatar').onclick=()=>{
+    $('#mmAvatar').value='';
+    $('#avatarPreview').innerHTML=`<span style="font-size:24px">${esc(($('#mmNick').value||'？').slice(0,1))}</span>`;
+  };
+  $('#avatarInput').onchange=async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const data=await fileToDataURL(file,240,240);
+    $('#mmAvatar').value=data;
+    $('#avatarPreview').innerHTML=`<img src="${data}" style="width:100%;height:100%;object-fit:cover">`;
+    e.target.value='';
+  };
+  $('#mmNick').addEventListener('input',()=>{
+    if(!$('#mmAvatar').value)$('#avatarPreview').innerHTML=`<span style="font-size:24px">${esc(($('#mmNick').value||'？').slice(0,1))}</span>`;
+  });
+  $('#saveMember').onclick=()=>{
+    const member={
+      id:m.id,uid:$('#mmUid').value.trim(),nickname:$('#mmNick').value.trim(),
+      avatar:$('#mmAvatar').value||'',role:$('#mmRole').value,
+      status:$('#mmStatus').value,sendStatus:$('#mmSend').value,
+      remark:$('#mmRemark').value.trim(),rewards:{}
+    };
+    (b.rewardTypes||[]).filter(r=>r.enabled!==false).forEach(r=>member.rewards[r.id]=Number($(`#rw_${r.id}`)?.value||0));
+    if(!member.nickname)return alert('昵称不能为空。');
+    if(id){b.members=b.members.map(x=>x.id===id?member:x)}else{b.members.unshift(member)}
+    saveState();hideModal();renderMemberTable();
+    if(activePanel==='export')renderExportPaper();
+  };
+}
+
+/* ══ IMPORT MODAL ══ */
+function openImportModal(){
+  $('#modalTitle').textContent='批量导入';
+  $('#modalDesc').textContent='支持 JSON 或 CSV 文本导入。';
+  $('#modalBody').innerHTML=`
+    <div class="field">
+      <label>导入内容</label>
+      <textarea id="importText" placeholder='JSON: [{"nickname":"夏沫","uid":"CYG003","role":"总管理","rewards":{"base":180}}]'></textarea>
+    </div>
+    <div style="height:7px"></div>
+    <div class="info">只保留必要字段：昵称、UID、岗位、状态、发放状态、备注、头像、奖励明细。</div>
+  `;
+  $('#modalFoot').innerHTML=`<button class="btn soft" id="cancelImport">取消</button><button class="btn primary" id="doImport">导入</button>`;
+  showModal();
+  $('#cancelImport').onclick=hideModal;
+  $('#doImport').onclick=()=>{importMembers($('#importText').value.trim());hideModal();renderMemberTable()};
+}
+
+function importMembers(text){
+  const b=board();let items=[];
+  try{
+    if(/^\s*[\[{]/.test(text)){const p=JSON.parse(text);items=Array.isArray(p)?p:[p]}
+    else{
+      const lines=text.split(/\r?\n/).filter(Boolean);
+      const headers=lines.shift().split(',').map(s=>s.trim());
+      items=lines.map(line=>{const cols=line.split(',');const obj={};headers.forEach((h,i)=>obj[h]=(cols[i]||'').trim());return obj});
+    }
+  }catch(e){alert('导入失败，请检查格式。');return}
+  const next=b.members.length?Math.max(...b.members.map(x=>x.id))+1:1;
+  items.forEach((it,i)=>{
+    b.members.unshift({
+      id:next+i,uid:it.uid||`${b.id.toUpperCase()}${String(next+i).padStart(3,'0')}`,
+      nickname:it.nickname||it.name||'',avatar:it.avatar||'',
+      role:it.role||b.roles[0]?.name||'',status:it.status||'待审核',
+      sendStatus:it.sendStatus||'待发放',remark:it.remark||'',
+      rewards:typeof it.rewards==='object'&&it.rewards?it.rewards:{}
+    });
+  });
+  saveState();
+}
+
+// Init
+applyTheme(board().theme||'default');
+render();
+})();
+</script>
+</body>
+</html>
